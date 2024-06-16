@@ -1,44 +1,76 @@
+#include "ui_client.h"
 #include "client.h"
 #include <QFile>
 #include <QHostAddress>
 #include <QTextStream>
-#include "logger.h"
 #include <protocol.h>
+#include <cstring>
+#include <QMessageBox>
+#include "logger.h"
+
 
 Client::Client(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), ui(new Ui::Client)
 {
-
-    setUi();
+    ui->setupUi(this);
     loadConf(); // 读取配置文件
+
     connect(&m_tcpSocket, &QTcpSocket::connected, []{
         INFO << "连接服务器成功";
     });
+
+    connect(&m_tcpSocket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
+
     m_tcpSocket.connectToHost(QHostAddress(m_serverIp), m_serverPort);
 
-}
 
-void Client::setUi()
+}
+void Client::onReadyRead()
 {
-    this->resize(400,400);
-    edit = new QLineEdit(this);
-    edit->move(100, 100);
+    INFO << "可读消息长度 " << m_tcpSocket.bytesAvailable();
+    uint totalLen = 0;
+    m_tcpSocket.read(reinterpret_cast<char*>(&totalLen), sizeof(totalLen)); // 先读取消息总长度
+    uint MsgLen = totalLen - sizeof(PDU); // 计算出实际消息长度
+    PDU *pdu = makePDU(MsgLen); // 创建 pdu 用于保存协议消息
+    // 接受剩余协议内容
 
-    btn = new QPushButton("发送", this);
-    btn->move(200, 100);
+    m_tcpSocket.read(reinterpret_cast<char*>(pdu) + sizeof(totalLen), totalLen - sizeof(totalLen));
 
-    connect(btn, &QPushButton::clicked, [this]{
-        QString msg = edit->text();
-        std::string stdmsg = msg.toStdString();
-//        INFO << "stdmsg.size();" << stdmsg.size();
-        uint msgsize = stdmsg.size() + 1;
-        PDU* pdu = makePDU(msgsize);
-        pdu->msgType = EnMsgType::REGIST_MSG;
-        memcpy(pdu->msg,stdmsg.c_str(), msgsize);
-        m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
-        free(pdu);
-    });
+    INFO << "总长度: " << totalLen ;
+    INFO << "消息类型: " << (int)pdu->msgType;
+    INFO << "消息长度" << pdu->msgLen;
+    INFO << "消息内容" << pdu->msg;
+
+    switch(pdu->msgType) {
+            case EnMsgType::REGIST_RESPOND : {
+                bool ret;
+                memcpy(&ret, pdu->data, sizeof(ret));
+                QString info = ret ? "注册成功" : "注册失败";
+
+                QMessageBox::information(this, "注册", info);
+
+                break;
+            }
+            case EnMsgType::LOGIN_RESPOND : {
+                bool ret;
+                memcpy(&ret, pdu->data, sizeof(ret));
+                QString info = ret ? "登录成功" : "账号或密码错误";
+
+                QMessageBox::information(this, "注册", info);
+
+                break;
+            }
+            default :{
+                INFO << "未知消息";
+            }
+
+
+        }
+
+    free(pdu);
 }
+
+
 
 Client &Client::getInstance()
 {
@@ -64,3 +96,33 @@ void Client::loadConf() {
     confFile.close();
 }
 
+
+void Client::on_registBtn_clicked()
+{
+    QString name = ui->nameLE->text();
+    QString pwd = ui->pwdLE->text();
+    if(name.isEmpty() || pwd.isEmpty()) {
+         QMessageBox::information(this, "注册", "账号或密码不合法!");
+    }
+    PDU* pdu = makePDU(0);
+    pdu->msgType =EnMsgType::REGIST_MSG;
+    memcpy(pdu->data, name.toStdString().c_str(), 32); // 用户名放到 pdu 中
+    memcpy(pdu->data + 32, name.toStdString().c_str(), 32); // 密码放到 pdu 中
+    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+}
+
+void Client::on_loginBtn_clicked()
+{
+    QString name = ui->nameLE->text();
+    QString pwd = ui->pwdLE->text();
+    if(name.isEmpty() || pwd.isEmpty()) {
+         QMessageBox::information(this, "登录", "账号或密码不合法!");
+    }
+    INFO << "name " << name << "pwd " << pwd;
+    m_userName = name;
+    PDU* pdu = makePDU(0);
+    pdu->msgType =EnMsgType::LOGIN_MSG;
+    memcpy(pdu->data, name.toStdString().c_str(), 32); // 用户名放到 pdu 中
+    memcpy(pdu->data + 32, pwd.toStdString().c_str(), 32); // 密码放到 pdu 中
+    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+}

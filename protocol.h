@@ -5,7 +5,8 @@ using uint = unsigned int;
 enum class EnMsgType  {
     REGIST_MSG = 1, // 注册消息
     REGIST_RESPOND, // 注册消息响应
-
+    LOGIN_MSG, // 登录消息
+    LOGIN_RESPOND, // 登录消息响应
 };
 
 struct PDU { // 协议数据单元， 使用柔性数组存储数据
