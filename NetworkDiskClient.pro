@@ -17,12 +17,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     client.cpp \
+    fileform.cpp \
+    friendform.cpp \
     main.cpp \
+    mainform.cpp \
     protocol.cpp
 
 HEADERS += \
     client.h \
+    fileform.h \
+    friendform.h \
     logger.h \
+    mainform.h \
     protocol.h
 
 # Default rules for deployment.
@@ -34,4 +40,7 @@ RESOURCES += \
     resource.qrc
 
 FORMS += \
-    client.ui
+    client.ui \
+    fileform.ui \
+    friendform.ui \
+    mainform.ui

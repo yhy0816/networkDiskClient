@@ -1,12 +1,14 @@
 #include "ui_client.h"
+#include "logger.h"
+#include "mainform.h"
 #include "client.h"
+
 #include <QFile>
 #include <QHostAddress>
 #include <QTextStream>
 #include <protocol.h>
 #include <cstring>
 #include <QMessageBox>
-#include "logger.h"
 
 
 Client::Client(QWidget *parent)
@@ -55,8 +57,27 @@ void Client::onReadyRead()
                 bool ret;
                 memcpy(&ret, pdu->data, sizeof(ret));
                 QString info = ret ? "登录成功" : "账号或密码错误";
-
                 QMessageBox::information(this, "注册", info);
+                if(ret) {
+
+                    MainForm::getInstance().show();
+                    this->hide();
+                }
+                break;
+            }
+            case EnMsgType::FIND_FRIEND_RESPONE : {
+                int ret = 0;
+                memcpy(&ret, pdu->data, sizeof(ret));
+                QString info;
+                if(ret == -1) {
+                    info = "用户不存在";
+                } else if(ret == 0) {
+                    info = "用户在线";
+                } else {
+                    info = "用户不线";
+                }
+
+                QMessageBox::information(this, "查找用户", info);
 
                 break;
             }
@@ -106,8 +127,8 @@ void Client::on_registBtn_clicked()
     }
     PDU* pdu = makePDU(0);
     pdu->msgType =EnMsgType::REGIST_MSG;
-    memcpy(pdu->data, name.toStdString().c_str(), 32); // 用户名放到 pdu 中
-    memcpy(pdu->data + 32, name.toStdString().c_str(), 32); // 密码放到 pdu 中
+    memcpy(pdu->data, name.trimmed().toStdString().c_str(), 32); // 用户名放到 pdu 中
+    memcpy(pdu->data + 32, name.trimmed().toStdString().c_str(), 32); // 密码放到 pdu 中
     m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
 }
 

@@ -18,7 +18,7 @@ class Client : public QMainWindow
 public:
     static Client& getInstance();
     ~Client();
-
+    QTcpSocket& getSocket() {return m_tcpSocket;}
 private:
     //为了实现单例模式
     Client(QWidget *parent = nullptr);
@@ -34,6 +34,7 @@ private:
     QPushButton* btn;
     Ui::Client *ui;
     QString m_userName;
+
 public slots:
     void onReadyRead();
 private slots:
