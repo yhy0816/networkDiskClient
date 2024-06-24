@@ -21,6 +21,7 @@ SOURCES += \
     friendform.cpp \
     main.cpp \
     mainform.cpp \
+    onlineuserform.cpp \
     protocol.cpp
 
 HEADERS += \
@@ -29,6 +30,7 @@ HEADERS += \
     friendform.h \
     logger.h \
     mainform.h \
+    onlineuserform.h \
     protocol.h
 
 # Default rules for deployment.
@@ -43,4 +45,5 @@ FORMS += \
     client.ui \
     fileform.ui \
     friendform.ui \
-    mainform.ui
+    mainform.ui \
+    onlineuserform.ui

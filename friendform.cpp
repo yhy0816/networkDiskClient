@@ -18,6 +18,11 @@ FriendForm::~FriendForm()
     delete ui;
 }
 
+OnlineUserForm &FriendForm::getOnlineUserForm()
+{
+    return onlineUser;
+}
+
 void FriendForm::on_findFriendPB_clicked()
 {
     QString name =  QInputDialog::getText(this, "查找", "查找用户");
@@ -27,4 +32,17 @@ void FriendForm::on_findFriendPB_clicked()
     pdu->msgType = EnMsgType::FIND_FRIEND_MSG;
     memcpy(pdu->data, sname.c_str(), sname.size());
     Client::getInstance().getSocket().write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    free(pdu);
+}
+
+void FriendForm::on_onlineFriendPb_clicked()
+{
+    if(this->onlineUser.isHidden()) {
+        this->onlineUser.show();
+    }
+
+    PDU* pdu = makePDU(0);
+    pdu->msgType = EnMsgType::GET_ONLINE_USERS_MSG;
+    Client::getInstance().getSocket().write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    free(pdu);
 }

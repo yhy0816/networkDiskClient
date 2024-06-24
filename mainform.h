@@ -2,7 +2,7 @@
 #define MAINFORM_H
 
 #include <QWidget>
-
+#include "friendform.h"
 namespace Ui {
 class MainForm;
 }
@@ -15,6 +15,7 @@ public:
 
     ~MainForm();
     static MainForm& getInstance();
+    FriendForm* getFriendForm();
 
 private slots:
 

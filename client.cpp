@@ -81,6 +81,22 @@ void Client::onReadyRead()
 
                 break;
             }
+
+            case EnMsgType::GET_ONLINE_USERS_RESPONE : {
+                int userNum = pdu->msgLen / 32;
+                QStringList onlineUsers;
+                for(int i = 0; i < userNum; i++) {
+                    char buf[32] = {};
+                    memcpy(buf, pdu->msg + 32 * i, 32);
+                    if(m_userName == buf) continue;
+                    onlineUsers.append(buf);
+                }
+                MainForm::getInstance()
+                        .getFriendForm()
+                        ->getOnlineUserForm()
+                        .updateOnlineUsers(onlineUsers);
+                break;
+            }
             default :{
                 INFO << "未知消息";
             }
@@ -130,6 +146,7 @@ void Client::on_registBtn_clicked()
     memcpy(pdu->data, name.trimmed().toStdString().c_str(), 32); // 用户名放到 pdu 中
     memcpy(pdu->data + 32, name.trimmed().toStdString().c_str(), 32); // 密码放到 pdu 中
     m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    free(pdu);
 }
 
 void Client::on_loginBtn_clicked()
@@ -146,4 +163,5 @@ void Client::on_loginBtn_clicked()
     memcpy(pdu->data, name.toStdString().c_str(), 32); // 用户名放到 pdu 中
     memcpy(pdu->data + 32, pwd.toStdString().c_str(), 32); // 密码放到 pdu 中
     m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    free(pdu);
 }
