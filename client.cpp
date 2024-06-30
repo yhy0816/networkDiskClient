@@ -27,82 +27,13 @@ Client::Client(QWidget *parent)
 
 
 }
+
 void Client::onReadyRead()
 {
-    INFO << "可读消息长度 " << m_tcpSocket.bytesAvailable();
-    uint totalLen = 0;
-    m_tcpSocket.read(reinterpret_cast<char*>(&totalLen), sizeof(totalLen)); // 先读取消息总长度
-    uint MsgLen = totalLen - sizeof(PDU); // 计算出实际消息长度
-    PDU *pdu = makePDU(MsgLen); // 创建 pdu 用于保存协议消息
-    // 接受剩余协议内容
-
-    m_tcpSocket.read(reinterpret_cast<char*>(pdu) + sizeof(totalLen), totalLen - sizeof(totalLen));
-
-    INFO << "总长度: " << totalLen ;
-    INFO << "消息类型: " << (int)pdu->msgType;
-    INFO << "消息长度" << pdu->msgLen;
-    INFO << "消息内容" << pdu->msg;
-
-    switch(pdu->msgType) {
-            case EnMsgType::REGIST_RESPOND : {
-                bool ret;
-                memcpy(&ret, pdu->data, sizeof(ret));
-                QString info = ret ? "注册成功" : "注册失败";
-
-                QMessageBox::information(this, "注册", info);
-
-                break;
-            }
-            case EnMsgType::LOGIN_RESPOND : {
-                bool ret;
-                memcpy(&ret, pdu->data, sizeof(ret));
-                QString info = ret ? "登录成功" : "账号或密码错误";
-                QMessageBox::information(this, "注册", info);
-                if(ret) {
-
-                    MainForm::getInstance().show();
-                    this->hide();
-                }
-                break;
-            }
-            case EnMsgType::FIND_FRIEND_RESPONE : {
-                int ret = 0;
-                memcpy(&ret, pdu->data, sizeof(ret));
-                QString info;
-                if(ret == -1) {
-                    info = "用户不存在";
-                } else if(ret == 0) {
-                    info = "用户在线";
-                } else {
-                    info = "用户不线";
-                }
-
-                QMessageBox::information(this, "查找用户", info);
-
-                break;
-            }
-
-            case EnMsgType::GET_ONLINE_USERS_RESPONE : {
-                int userNum = pdu->msgLen / 32;
-                QStringList onlineUsers;
-                for(int i = 0; i < userNum; i++) {
-                    char buf[32] = {};
-                    memcpy(buf, pdu->msg + 32 * i, 32);
-                    if(m_userName == buf) continue;
-                    onlineUsers.append(buf);
-                }
-                MainForm::getInstance()
-                        .getFriendForm()
-                        ->getOnlineUserForm()
-                        .updateOnlineUsers(onlineUsers);
-                break;
-            }
-            default :{
-                INFO << "未知消息";
-            }
 
 
-        }
+    PDU* pdu = readPDU();
+    m_msgHandler.handleMsg(pdu);
 
     free(pdu);
 }
@@ -118,6 +49,24 @@ Client &Client::getInstance()
 
 Client::~Client()
 {
+}
+
+PDU *Client::readPDU()
+{
+    INFO << "可读消息长度 " << m_tcpSocket.bytesAvailable();
+    uint totalLen = 0;
+    m_tcpSocket.read(reinterpret_cast<char*>(&totalLen), sizeof(totalLen)); // 先读取消息总长度
+    uint MsgLen = totalLen - sizeof(PDU); // 计算出实际消息长度
+    PDU *pdu = makePDU(MsgLen); // 创建 pdu 用于保存协议消息
+    // 接受剩余协议内容
+
+    m_tcpSocket.read(reinterpret_cast<char*>(pdu) + sizeof(totalLen), totalLen - sizeof(totalLen));
+
+    INFO << "总长度: " << totalLen ;
+    INFO << "消息类型: " << (int)pdu->msgType;
+    INFO << "消息长度" << pdu->msgLen;
+    INFO << "消息内容" << pdu->msg;
+    return pdu;
 }
 
 void Client::loadConf() {
@@ -138,13 +87,24 @@ void Client::on_registBtn_clicked()
 {
     QString name = ui->nameLE->text();
     QString pwd = ui->pwdLE->text();
+
     if(name.isEmpty() || pwd.isEmpty()) {
          QMessageBox::information(this, "注册", "账号或密码不合法!");
+         return;
+    }
+    std::string sname = name.trimmed().toStdString();
+    std::string spwd = pwd.trimmed().toStdString();
+    if(sname.size() >= 32 || spwd.size() >= 32) {
+         QMessageBox::information(this, "注册", "账号或密码不合法!");
+         return;
     }
     PDU* pdu = makePDU(0);
     pdu->msgType =EnMsgType::REGIST_MSG;
-    memcpy(pdu->data, name.trimmed().toStdString().c_str(), 32); // 用户名放到 pdu 中
-    memcpy(pdu->data + 32, name.trimmed().toStdString().c_str(), 32); // 密码放到 pdu 中
+
+    INFO << sname.size();
+    INFO << spwd.size();
+    memcpy(pdu->data, sname.c_str(), sname.size() + 1); // 用户名放到 pdu 中
+    memcpy(pdu->data + 32, spwd.c_str(), spwd.size() + 1); // 密码放到 pdu 中
     m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
     free(pdu);
 }

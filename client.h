@@ -5,6 +5,8 @@
 #include <QTcpSocket>
 #include <QLineEdit>
 #include <QPushButton>
+#include "msghandler.h"
+#include "protocol.h"
 
 namespace Ui {
 class Client;
@@ -19,13 +21,16 @@ public:
     static Client& getInstance();
     ~Client();
     QTcpSocket& getSocket() {return m_tcpSocket;}
+    PDU* readPDU();
+    QString getName() const {return m_userName;}
 private:
     //为了实现单例模式
     Client(QWidget *parent = nullptr);
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;
-
     void loadConf();
+
+    MsgHandler m_msgHandler;
     QString m_serverIp;
     quint16 m_serverPort;
     QTcpSocket m_tcpSocket;
