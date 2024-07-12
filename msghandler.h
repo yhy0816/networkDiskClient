@@ -11,6 +11,12 @@ public:
     void loginHandle(PDU* pdu);
     void findFriendHandle(PDU* pdu);
     void onlineUsersHandle(PDU* pdu);
+    void addFriendHandle(PDU* pdu);
+    void askFriendHandle(PDU* pdu);
+    void agreeFriendHandle(PDU* pdu);
+    void getFriendsList(PDU* pdu);
+    void removeFriendsList(PDU* pdu);
+    void chatMsgHandle(PDU* pdu);
 };
 
 #endif // MSGHANDLER_H

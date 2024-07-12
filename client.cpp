@@ -34,7 +34,6 @@ void Client::onReadyRead()
 
     PDU* pdu = readPDU();
     m_msgHandler.handleMsg(pdu);
-
     free(pdu);
 }
 
@@ -67,6 +66,11 @@ PDU *Client::readPDU()
     INFO << "消息长度" << pdu->msgLen;
     INFO << "消息内容" << pdu->msg;
     return pdu;
+}
+
+void Client::sendPDU(PDU *pdu)
+{
+    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
 }
 
 void Client::loadConf() {
@@ -103,9 +107,10 @@ void Client::on_registBtn_clicked()
 
     INFO << sname.size();
     INFO << spwd.size();
-    memcpy(pdu->data, sname.c_str(), sname.size() + 1); // 用户名放到 pdu 中
-    memcpy(pdu->data + 32, spwd.c_str(), spwd.size() + 1); // 密码放到 pdu 中
-    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    memcpy(pdu->data, sname.c_str(), sname.size()); // 用户名放到 pdu 中
+    memcpy(pdu->data + 32, spwd.c_str(), spwd.size()); // 密码放到 pdu 中
+//    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    sendPDU(pdu);
     free(pdu);
 }
 
@@ -122,6 +127,7 @@ void Client::on_loginBtn_clicked()
     pdu->msgType =EnMsgType::LOGIN_MSG;
     memcpy(pdu->data, name.toStdString().c_str(), 32); // 用户名放到 pdu 中
     memcpy(pdu->data + 32, pwd.toStdString().c_str(), 32); // 密码放到 pdu 中
-    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
+    sendPDU(pdu);
+//    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
     free(pdu);
 }

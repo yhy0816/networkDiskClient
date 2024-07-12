@@ -17,3 +17,14 @@ PDU* makePDU(uint msgLen)
     return pdu;
 }
 
+
+//Protocol::Protocol(int msgLen) : _pdu(makePDU(msgLen))
+//{
+
+//}
+
+//Protocol::~Protocol()
+//{
+//    if(_pdu)
+//        free(_pdu);
+//}

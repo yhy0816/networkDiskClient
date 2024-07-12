@@ -23,6 +23,7 @@ public:
     QTcpSocket& getSocket() {return m_tcpSocket;}
     PDU* readPDU();
     QString getName() const {return m_userName;}
+    void sendPDU(PDU* pdu);
 private:
     //为了实现单例模式
     Client(QWidget *parent = nullptr);

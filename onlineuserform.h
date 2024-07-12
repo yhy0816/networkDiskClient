@@ -1,6 +1,7 @@
 #ifndef ONLINEUSERFORM_H
 #define ONLINEUSERFORM_H
 
+#include <QListWidget>
 #include <QWidget>
 
 namespace Ui {
@@ -15,6 +16,9 @@ public:
     explicit OnlineUserForm(QWidget *parent = nullptr);
     ~OnlineUserForm();
     void updateOnlineUsers(QStringList &onlineUsers);
+private slots:
+    void on_onlineUserLW_itemDoubleClicked(QListWidgetItem *item);
+
 private:
     Ui::OnlineUserForm *ui;
 };
