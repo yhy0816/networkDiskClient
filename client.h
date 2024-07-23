@@ -40,6 +40,7 @@ private:
     QPushButton* btn;
     Ui::Client *ui;
     QString m_userName;
+    QByteArray m_buffer;
 
 public slots:
     void onReadyRead();

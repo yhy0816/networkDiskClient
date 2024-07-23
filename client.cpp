@@ -30,11 +30,29 @@ Client::Client(QWidget *parent)
 
 void Client::onReadyRead()
 {
+    INFO << "可读消息长度 " << m_tcpSocket.bytesAvailable();
 
+    QByteArray data = m_tcpSocket.readAll();
 
-    PDU* pdu = readPDU();
-    m_msgHandler.handleMsg(pdu);
-    free(pdu);
+    m_buffer.append(data);
+
+    while(m_buffer.size() >= static_cast<int>(sizeof(PDU))) {
+        PDU* pdu = reinterpret_cast<PDU*>(m_buffer.data());
+        int totalLen = pdu->totalLen;
+        if(totalLen > m_buffer.size()) {
+            break;
+        }
+        PDU* msgPDU = makePDU(pdu->msgLen);
+        memcpy(msgPDU, pdu, pdu->totalLen);
+        m_msgHandler.printPDU(msgPDU);
+        m_msgHandler.handleMsg(msgPDU);
+        free(msgPDU);
+        m_buffer.remove(0, totalLen);
+    }
+
+//    PDU* pdu = readPDU();
+//    m_msgHandler.handleMsg(pdu);
+//    free(pdu);
 }
 
 
@@ -70,6 +88,9 @@ PDU *Client::readPDU()
 
 void Client::sendPDU(PDU *pdu)
 {
+
+    INFO << "send : ";
+    m_msgHandler.printPDU(pdu);
     m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);
 }
 
@@ -105,8 +126,8 @@ void Client::on_registBtn_clicked()
     PDU* pdu = makePDU(0);
     pdu->msgType =EnMsgType::REGIST_MSG;
 
-    INFO << sname.size();
-    INFO << spwd.size();
+//    INFO << sname.size();
+//    INFO << spwd.size();
     memcpy(pdu->data, sname.c_str(), sname.size()); // 用户名放到 pdu 中
     memcpy(pdu->data + 32, spwd.c_str(), spwd.size()); // 密码放到 pdu 中
 //    m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->totalLen);

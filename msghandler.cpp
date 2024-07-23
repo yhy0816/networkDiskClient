@@ -58,7 +58,23 @@ void MsgHandler::handleMsg(PDU *pdu)
                 chatMsgHandle(pdu);
                 break;
             }
-
+            case EnMsgType::MKDIR_RESPONE : {
+                makeDirHandle(pdu);
+                break;
+            }
+            case EnMsgType::GET_FILES_RESPONE : {
+                getFilesHandle(pdu);
+                break;
+            }
+            case EnMsgType::DEL_DIR_RESPONE :
+            case EnMsgType::DEL_FILE_RESPONE : {
+                delDirHandle(pdu);
+                break;
+            }
+            case EnMsgType::RENAME_FILE_RESPONE : {
+                renameFileHandle(pdu);
+                break;
+            }
             default :{
                  INFO << "未知消息 " << (int)pdu->msgType;
             }
@@ -217,4 +233,64 @@ void MsgHandler::chatMsgHandle(PDU *pdu)
     if(chatform->isHidden()) {
         chatform->show();
     }
+}
+
+void MsgHandler::makeDirHandle(PDU *pdu)
+{
+    int ret = 0;
+    memcpy(&ret, pdu->data, sizeof ret);
+    if(ret) {
+        QMessageBox::information(&MainForm::getInstance(), "提示", "创建文件夹成功");
+    } else {
+        QMessageBox::information(&MainForm::getInstance(), "提示", "创建文件夹失败");
+
+    }
+    MainForm::getInstance().getFileForm()->sendGetFilesRequest();
+
+}
+
+void MsgHandler::getFilesHandle(PDU *pdu)
+{
+    int cnt = pdu->msgLen / sizeof (FileInfo);
+    QList<FileInfo*> fileInfoList;
+    for(int i = 0; i < cnt; i++) {
+        FileInfo* cur = reinterpret_cast<FileInfo*>(pdu->msg) + i;
+        fileInfoList.append(cur);
+    }
+    MainForm::getInstance().getFileForm()->refreshList(fileInfoList);
+
+}
+
+void MsgHandler::delDirHandle(PDU *pdu)
+{
+    bool ret;
+    memcpy(&ret, pdu->data, sizeof(ret));
+    if(ret) {
+        MainForm::getInstance().getFileForm()->sendGetFilesRequest();
+    } else {
+        QMessageBox::information(MainForm::getInstance().getFileForm(), "删除文件夹", "删除失败");
+    }
+}
+
+void MsgHandler::renameFileHandle(PDU *pdu)
+{
+    int ret = 0;
+    memcpy(&ret, pdu->data, sizeof(ret));
+    if(ret == 1) {
+        MainForm::getInstance().getFileForm()->sendGetFilesRequest();
+
+    } else {
+        QMessageBox::information(MainForm::getInstance().getFileForm(), "重命名", "重命名失败");
+
+    }
+}
+
+void MsgHandler::printPDU(PDU *pdu) {
+    INFO << "总长度: " << pdu->totalLen ;
+    INFO << "消息类型: " << (int)pdu->msgType;
+    INFO << "数据1" << pdu->data;
+    INFO << "数据2" << pdu->data + 32;
+    INFO << "消息长度" << pdu->msgLen;
+    INFO << "消息内容" << pdu->msg;
+
 }

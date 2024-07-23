@@ -17,6 +17,11 @@ public:
     void getFriendsList(PDU* pdu);
     void removeFriendsList(PDU* pdu);
     void chatMsgHandle(PDU* pdu);
+    void makeDirHandle(PDU* pdu);
+    void getFilesHandle(PDU* pdu);
+    void delDirHandle(PDU* pdu);
+    void renameFileHandle(PDU* pdu);
+    void printPDU(PDU* pdu);
 };
 
 #endif // MSGHANDLER_H

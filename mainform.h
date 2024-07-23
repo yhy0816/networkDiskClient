@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "friendform.h"
 #include "chatform.h"
+#include "fileform.h"
 namespace Ui {
 class MainForm;
 }
@@ -11,13 +12,13 @@ class MainForm;
 class MainForm : public QWidget
 {
     Q_OBJECT
-
 public:
 
     ~MainForm();
     static MainForm& getInstance();
     FriendForm* getFriendForm();
     ChatForm* getChatForm();
+    FileForm* getFileForm();
 private slots:
 
     void on_friendPB_clicked();

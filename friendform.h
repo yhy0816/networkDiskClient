@@ -32,6 +32,8 @@ private slots:
 
     void on_chatPB_clicked();
 
+    void on_friendListLW_itemDoubleClicked(QListWidgetItem *item);
+
 private:
     Ui::FriendForm *ui;
     OnlineUserForm onlineUser;

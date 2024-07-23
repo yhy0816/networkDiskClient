@@ -29,6 +29,13 @@ ChatForm *MainForm::getChatForm()
     return static_cast<FriendForm *>(ui->stackedWidget->widget(1))->getChatForm();
 }
 
+FileForm *MainForm::getFileForm()
+{
+     return static_cast<FileForm *>(ui->stackedWidget->widget(0));
+}
+
+
+
 void MainForm::on_friendPB_clicked()
 {
     ui->filePB->setStyleSheet("QPushButton{border:none;padding:20px;}");
