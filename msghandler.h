@@ -21,6 +21,7 @@ public:
     void getFilesHandle(PDU* pdu);
     void delDirHandle(PDU* pdu);
     void renameFileHandle(PDU* pdu);
+    void moveFileHandle(PDU* pdu);
     void printPDU(PDU* pdu);
 };
 

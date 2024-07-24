@@ -32,6 +32,8 @@ enum class EnMsgType  {
     RENAME_FILE_RESPONE, // 重命名文件响应
     MOVE_FILE_MSG, // 移动文件消息
     MOVE_FILE_RESPONE, // 移动文件响应
+    UPLOAD_REQUEST_MSG, // 上传文件请求消息
+    UPLOAD_REQUEST_RESPONE, // 上传文件请求响应
 };
 
 struct PDU { // 协议数据单元， 使用柔性数组存储数据

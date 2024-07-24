@@ -38,12 +38,17 @@ private slots:
 
     void on_movePB_clicked();
 
+    void on_uploadFilePB_clicked();
+
 private:
     QString m_curPath;
     QString m_userName;
     QString m_moveFilePath;
     QString m_moveFileName;
     QList<QListWidgetItem*> m_fileWidgetList;
+
+    bool m_uploading;
+    QString m_uploadingFileName;
     Ui::FileForm *ui;
 };
 

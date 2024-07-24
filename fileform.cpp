@@ -1,6 +1,7 @@
 #include "fileform.h"
 #include "ui_fileform.h"
 #include "logger.h"
+#include <QFileDialog>
 #include <QInputDialog>
 #include <QLabel>
 #include <QMessageBox>
@@ -12,7 +13,6 @@ FileForm::FileForm(QWidget *parent) :
 {
     ui->setupUi(this);
     m_userName = Client::getInstance().getName();
-    m_curPath = "/";
     sendGetFilesRequest();
 }
 
@@ -32,10 +32,10 @@ void FileForm::refreshList(const QList<FileInfo*>& fileList)
         QListWidgetItem* item = new QListWidgetItem();
         if(fileList[i]->fileType == 0) {
             QIcon icon = QIcon(":/images/dir.png");
-            icon.setThemeName("dir");
+            icon.set("dir");
             item->setIcon(icon);
         } else if(fileList[i]->fileType == 1) {
-            QIcon icon = QIcon(":/images/dir.png");
+            QIcon icon = QIcon(":/images/file.png");
             icon.setThemeName("file");
             item->setIcon(icon);
         }
@@ -122,6 +122,7 @@ void FileForm::on_delFilePB_clicked()
     if(item == nullptr) return;
     if(item->icon().themeName() != "file") {
         QMessageBox::information(this,  "删除", "请选择文件");
+        return;
     }
     QString choiceDir = item->text();
     INFO << "删除: " << QString(m_curPath + choiceDir);
@@ -163,16 +164,7 @@ void FileForm::on_renamePB_clicked()
     free(pdu);
 }
 
-void FileForm::on_fileListLW_itemDoubleClicked(QListWidgetItem *item)
-{
 
-    if(item == nullptr) return;
-    if(item->icon().themeName() != "dir") {
-       return;
-    }
-    m_curPath += item->text() + "/";
-    sendGetFilesRequest();
-}
 
 void FileForm::on_returnPB_clicked()
 {
@@ -181,7 +173,6 @@ void FileForm::on_returnPB_clicked()
         return;
     }
     int idx = m_curPath.lastIndexOf("/");
-    if(idx == 0) return;
     m_curPath.remove(idx, m_curPath.size() - idx);
 
     sendGetFilesRequest();
@@ -209,9 +200,9 @@ void FileForm::on_movePB_clicked()
     QString newFilePathName;
     QString oldFilePathName = m_moveFilePath + "/" + m_moveFileName;
     if(item == nullptr) {
-        newFilePathName = m_curPath + "/" + m_moveFileName;
+        newFilePathName = m_curPath + "/" +  m_moveFileName ;
     } else {
-        newFilePathName = m_curPath + "/" + item->text() + m_moveFileName;
+        newFilePathName = m_curPath  + "/" + item->text() + "/" + m_moveFileName;
     }
 
     int ret = QMessageBox::question(this, "粘贴/取消", "是否粘贴文件");
@@ -219,7 +210,7 @@ void FileForm::on_movePB_clicked()
     if(ret == QMessageBox::No) return;
     std::string newfilename = newFilePathName.toStdString();
     std::string oldfilename = oldFilePathName.toStdString();
-    std::string curname = m_curPath.toStdString();
+    std::string curname = m_userName.toStdString();
     PDU* pdu = makePDU(newfilename.size() + oldfilename.size() + 1);
     pdu->msgType = EnMsgType::MOVE_FILE_MSG;
 
@@ -232,5 +223,35 @@ void FileForm::on_movePB_clicked()
 
     Client::getInstance().sendPDU(pdu);
     free(pdu);
+
+}
+
+void FileForm::on_fileListLW_doubleClicked(const QModelIndex &index)
+{
+
+}
+
+void FileForm::on_fileListLW_itemDoubleClicked(QListWidgetItem *item)
+{
+    INFO << item->icon().themeName();
+    if(item == nullptr) return;
+    if(item->icon().themeName() != "dir") {
+       QMessageBox::information(this, "进入", "请选择文件夹");
+       return;
+    }
+    m_curPath +=  "/" + item->text();
+    sendGetFilesRequest();
+}
+
+void FileForm::on_uploadFilePB_clicked()
+{
+    QString filePath = QFileDialog::getOpenFileName();
+    if(filePath.isEmpty()) return;
+    INFO << "上传 " << filePath;
+    int idx = filePath.lastIndexOf("/");
+    m_uploadingFileName = filePath.right(idx + 1);
+    std::string filename = m_uploadingFileName.toStdString();
+
+
 
 }

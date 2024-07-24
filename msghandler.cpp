@@ -75,6 +75,10 @@ void MsgHandler::handleMsg(PDU *pdu)
                 renameFileHandle(pdu);
                 break;
             }
+            case EnMsgType::MOVE_FILE_RESPONE : {
+                moveFileHandle(pdu);
+                break;
+            }
             default :{
                  INFO << "未知消息 " << (int)pdu->msgType;
             }
@@ -274,13 +278,26 @@ void MsgHandler::delDirHandle(PDU *pdu)
 
 void MsgHandler::renameFileHandle(PDU *pdu)
 {
-    int ret = 0;
+    bool ret = 0;
     memcpy(&ret, pdu->data, sizeof(ret));
     if(ret == 1) {
         MainForm::getInstance().getFileForm()->sendGetFilesRequest();
 
     } else {
         QMessageBox::information(MainForm::getInstance().getFileForm(), "重命名", "重命名失败");
+
+    }
+}
+
+void MsgHandler::moveFileHandle(PDU *pdu)
+{
+    bool ret = 0;
+    memcpy(&ret, pdu->data, sizeof(ret));
+    if(ret == 1) {
+        MainForm::getInstance().getFileForm()->sendGetFilesRequest();
+
+    } else {
+        QMessageBox::information(MainForm::getInstance().getFileForm(), "移动", "移动失败");
 
     }
 }

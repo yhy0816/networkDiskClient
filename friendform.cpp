@@ -101,3 +101,8 @@ void FriendForm::on_chatPB_clicked()
     this->chatForm.setFriendName(item->text());
     this->chatForm.show();
 }
+
+void FriendForm::on_friendListLW_itemDoubleClicked(QListWidgetItem *item)
+{
+
+}
